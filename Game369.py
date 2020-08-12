@@ -20,7 +20,7 @@ async def Ready(self, message):
 async def Unready(self, message):
     if game_state == GameState.idle and message.author in ready_user_list:
         ready_user_list.remove(message.author)
-        await message.channel.send(message.author.name + "참여가 취소되었습니다.")
+        await message.channel.send(message.author.name + " 참여가 취소되었습니다.")
 
 # 참여 리스트
 async def ShowReadyList(self, message):
