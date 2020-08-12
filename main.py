@@ -1,43 +1,24 @@
-import discord;
-import random;
-import re;
-import time;
-import sqlite3;
+import discord
+import random
+import re
+import time
+import Game369
+import TailCatcher
+import MemberList
 
-# regexs
+# regex
 RE_POSITIVE_INTEGER = re.compile(r"^\d*[1-9]$")
-RE_START_CAT = re.compile(r'(^고[양냥]이)|(냥$)')
-RE_POTATO = re.compile(r'((wedge)|(ㅇㅈ)|(외질)|(웨지)|(왜지)|(우ㅐ지)|(오ㅔ지)|(외지)|(왜쥐)|(웨쥐)|(웨쥐)|(오ㅔ쥐)|(외쥐))$')
-RE_SQUIRREL = re.compile(r'^.*(다)[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
-RE_YOGURT = re.compile(r'^.*(요)[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
-RE_RAVEN = re.compile(r'^.*(가|까|깎|꺄|깍|꺅|꺆|g+a|ka|KA|GA)[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
-RE_FOOD = re.compile(r'^.*((배고파)|(뭐\s*먹지)|(ㅂㄱㅍ))[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
-RE_SAD = re.compile(r'^.*((ㅜ)|(ㅠ)|(T))+\s*($|\n)')
-
-# files
-POTATO_FILES = ['Files/potato.jpg']
-SQUIRREL_FILES = ['Files/Squirrel1.jpg', 'Files/Squirrel3.jpg', 'Files/Squirrel4.jpg', 'Files/Squirrel5.jpg']
-YOGURT_FILES = ['Files/yogurt.jpg']
-RAVEN_FILES = ['Files/raven.jpg', 'Files/raven2.jpg']
-FOOD_FILES = ['Files/dbe.jpg']
-SAD_FILES = ['Files/rupy_sad.jpg']
-
-# string list
-FOOD_LIST = ["햄버거", "치킨", "찜닭", "떡볶이", "바나나", "물먹어 돼지야"]
 
 # channels
 AVAILABLE_CHANNELS = ['team-강찬영', 'general']
 
-# DB
-DB_INSERT_SQL = 'INSERT INTO user(id) VALUES(?)'
-DB_SELECT_ALL_SQL = 'SELECT * FROM user'
-DB_SELECT_SQL = 'SELECT * FROM user WHERE id=?'
-DB_DELETE_SQL = 'DELETE FROM user WHERE id=?'
-
-DB = sqlite3.connect("DB/User.db")
-cur = DB.execute('CREATE TABLE IF NOT EXISTS user (id TEXT PRIMARY KEY)')
+# Init DB
+MemberList.Init()
 
 class MyClient(discord.Client):
+    game = discord.Game("대홍단감자")
+    await client.change_presence(status=discord.Status.online, activity=game)
+
     async def on_message(self, message):
         ### Validation
         if message.author == self.user: # 자기 메세지 반응 안함
@@ -46,69 +27,14 @@ class MyClient(discord.Client):
         if len(AVAILABLE_CHANNELS) > 0 and message.channel.name not in AVAILABLE_CHANNELS: # 채널 검증
             return
 
-        await self.on_potato(message)
-        await self.on_cat(message)
-        await self.on_squirrel(message)
-        await self.on_yogurt(message)
-        await self.on_raven(message)
-        await self.on_food(message)
-        await self.on_rupy_sad(message)
+        await TailCatcher.Catch(self, message)
         
         ### Feature
         if message.content.startswith('['):
             message.content = message.content[1:]
             await self.on_command(message)
             return
-    
-    async def on_potato(self, message):
-        if RE_POTATO.match(message.content):
-            #await message.channel.send("여러분의 성원에 힘입어 감자가 모두 동이 났습니다. 감사합니다.")
-            #return
-            if random.randrange(100) < 85:
-                await message.channel.send("감자")
-            else:
-                await message.channel.send(file=discord.File(random.choice(POTATO_FILES)))
-                
-    async def on_cat(self, message):
-        if RE_START_CAT.match(message.content):
-            embed = discord.Embed(title = 'What The Cat?', descripiton = '왈왈', color = 0x00ff50)
-            urlBase = 'https://loremflickr.com/320/240?lock='
-            plusnum = random.randrange(1,20000)
-            url2 = urlBase + str(plusnum)
-            embed.set_image(url = url2)
-            await message.channel.send(embed=embed)
-    
-    async def on_squirrel(self, message):
-        if RE_SQUIRREL.match(message.content):
-            if random.randrange(100) < 85:
-                await message.channel.send(random.choice(["람쥐", "람쥐썬더"]))
-            else:
-                await message.channel.send(file=discord.File(random.choice(SQUIRREL_FILES)))
-    
-    async def on_yogurt(self, message):
-        if RE_YOGURT.match(message.content):
-            if random.randrange(100) < 85:
-                await message.channel.send(random.choice(["구르트", "플레"]))
-            else:
-                await message.channel.send(file=discord.File(random.choice(YOGURT_FILES)))
 
-    async def on_raven(self, message):
-        if RE_RAVEN.match(message.content):
-            if random.randrange(100) < 85: 
-                await message.channel.send(random.choice(["마귀", "막까막", "악까악"]))
-            else:
-                await message.channel.send(file=discord.File(random.choice(RAVEN_FILES)))
-
-    async def on_food(self, message):
-        if RE_FOOD.match(message.content):
-            if random.randrange(100) < 85: 
-                await message.channel.send(random.choice(FOOD_LIST))
-            else:
-                await message.channel.send(file=discord.File(random.choice(FOOD_FILES)))
-
-    async def on_rupy_sad(self, message):
-        if RE_SAD.match(message.content):
-            await message.channel.send(file=discord.File(random.choice(SAD_FILES)))
 
     async def on_command(self, message):
         if message.content == '모든멤버': # JARAM ONLINE의 모든 사람들을 출력함
@@ -193,6 +119,8 @@ class MyClient(discord.Client):
             await message.channel.send("사다리 종료")
             return
 
+        
+
 
         if message.content.isdigit():
             send_buffer = "```" + str(int(message.content)**2)+ "```"
@@ -204,11 +132,9 @@ class MyClient(discord.Client):
             send_buffer = "" # 캐싱
             count=0
 
-            cur.execute(DB_SELECT_ALL_SQL)
-            rows = cur.fetchall()
-            for i in rows:
+            for id in MemberList.GetMembers():
                 count +=1
-                send_buffer += "Potato addict" + str(count) + " : " + str(self.get_user(int(i[0]))) + "\n"
+                send_buffer += "Potato addict" + str(count) + " : " + str(self.get_user(int(id))) + "\n"
             embed = discord.Embed(title="Potato addicts", description=send_buffer, color=0x00ff50)
             embed.set_author(name="Those who love potato wedges")
             embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/723859914090479656/742914673137025105/jaram_photo.jpg")
@@ -218,17 +144,13 @@ class MyClient(discord.Client):
 
         if message.content.startswith('멤버추가'): # .startswith : !멤버추가 로 시작하는 message는 모두 받음
             realtemp = message.content.split(" ")
-            realtemp2 = realtemp[1]
-            DB.execute(DB_INSERT_SQL, (int(realtemp2),))
-            DB.commit()
+            MemberList.AddMember(int(realtemp[1]))
             await message.channel.send('멤버 추가 완료')
             return
             
         if message.content.startswith('멤버제거'):
             realtemp = message.content.split(" ")
-            realtemp2 = realtemp[1]
-            DB.execute(DB_DELETE_SQL, (int(realtemp2),))
-            DB.commit()
+            MemberList.RemoveMember(int(realtemp[1]))
             await message.channel.send('멤버 제거 완료')
             return
 
@@ -263,10 +185,32 @@ class MyClient(discord.Client):
             embed.set_author(name="뽑기")
             await message.channel.send(embed = embed) # 보내기(느림)
             return
-        
-        #
-        
 
+
+        if message.content == "369 준비":
+            await Game369.Ready(self, message)
+            return
+
+        if message.content == "369 취소":
+            await Game369.Unready(self, message)
+            return
+        
+        if message.content == "369 시작":
+            await Game369.Start(self, message)
+            return
+        
+        if message.content == "369 참여자":
+            await Game369.ShowReadyList(self, message)
+            return
+
+        if message.content == "369 규칙":
+            await message.channel.send("369 게임의 룰은 모두 알다시피 처음에 1로 시작합니다. \
+            랜덤으로 순서가 나오며 순서대로 숫자를 1씩 더하며 채팅에 타이핑합니다 .\
+            타이핑할 숫자에 3, 6 , 9가 들어가면 \'짝\'을 치셔야합니다.\
+            \'짝\' 말고도  \"짝\", \"작\", \"쨕\", \"쟉\", \"쨖\", \"쟊\", \"짞\", \"쟊\"이 가능합니다.\
+            처음 제한시간은 15초지만 점점 빨라집니다. 그래서 후에는 2초마다 타이핑 하셔야 합니다.")
+            return
+        
 
         if message.content.startswith("명령어"):
             embed = discord.Embed(
@@ -280,7 +224,12 @@ class MyClient(discord.Client):
             embed.add_field(name = '[멤버제거', value = ': 감자 멤버에서 추방합니다.' ,inline = True)
             embed.add_field(name = '[뽑기', value = ': 사용법 : [뽑기 인원수 이름 이름 이름 ...' ,inline = False)
             embed.add_field(name = '[사다리', value = ': 사용법 : [사다리 이름 이름 사다리를 출력합니다.',inline = False)
-            embed.add_field(name = '숫자', value = ': 숫자를 입력하시면, 제곱을 해줍니다.',inline = False)
+            embed.add_field(name = '[숫자', value = ': 숫자를 입력하시면, 제곱을 해줍니다.',inline = False)
+            embed.add_field(name = '[369 준비', value = ': 369 게임을 준비합니다.',inline = True)
+            embed.add_field(name = '[369 시작', value = ': 369 게임을 시작합니다.',inline = True)
+            embed.add_field(name = '[369 취소', value = ': 369 게임을 준비를 취소 합니다.',inline = True)
+            embed.add_field(name = '[369 규칙', value = ': 369 게임의 룰을 알려줍니다.',inline = False)
+            embed.add_field(name = '[369 참여자', value = ': 369 게임의 참여자들을 알려줍니다.',inline = True)
             embed.add_field(name = '고양이',value = ': 고양이!!!!!!!!!!!!!!!!!!!!!!!' ,inline = False)
             embed.add_field(name = '람쥐썬더', value = '채팅 메시지 끝을 \'다\'로 끝내보세요. :D',inline = False)
             embed.add_field(name = '구르트아줌마요구르트주세요', value = '채팅 메시지 끝을 \'요\'로 끝내보세요. :D',inline = False)
