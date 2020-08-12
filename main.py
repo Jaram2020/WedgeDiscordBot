@@ -2,33 +2,42 @@ import discord;
 import random;
 import re;
 import time;
+import sqlite3;
 
 # regexs
-RE_POSITIVE_INTEGER = re.compile("^\d*[1-9]$")
-RE_START_CAT = re.compile('(^고[양냥]이)|(냥$)')
-RE_POTATO = re.compile('(wedge)|(ㅇㅈ)|(외질)|(웨지)|(왜지)|(우ㅐ지)|(오ㅔ지)|(외지)|(왜쥐)|(웨쥐)|(웨쥐)|(오ㅔ쥐)|(외쥐)$')
-RE_SQUIRREL = re.compile('^.*(다)[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
-RE_YOGURT = re.compile('^.*(요)[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
-RE_RAVEN = re.compile('^.*(가|까|깎|꺄|깍|꺅|꺆|g+a|ka|KA|GA)[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
-RE_FOOD = re.compile('^.*((배고파)|(뭐\s*먹지)|(ㅂㄱㅍ))[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
+RE_POSITIVE_INTEGER = re.compile(r"^\d*[1-9]$")
+RE_START_CAT = re.compile(r'(^고[양냥]이)|(냥$)')
+RE_POTATO = re.compile(r'((wedge)|(ㅇㅈ)|(외질)|(웨지)|(왜지)|(우ㅐ지)|(오ㅔ지)|(외지)|(왜쥐)|(웨쥐)|(웨쥐)|(오ㅔ쥐)|(외쥐))$')
+RE_SQUIRREL = re.compile(r'^.*(다)[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
+RE_YOGURT = re.compile(r'^.*(요)[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
+RE_RAVEN = re.compile(r'^.*(가|까|깎|꺄|깍|꺅|꺆|g+a|ka|KA|GA)[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
+RE_FOOD = re.compile(r'^.*((배고파)|(뭐\s*먹지)|(ㅂㄱㅍ))[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
+RE_SAD = re.compile(r'^.*((ㅜ)|(ㅠ)|(T))+\s*($|\n)')
 
 # files
 POTATO_FILES = ['Files/potato.jpg']
-SQUIRREL_FILES = ['Files/Squirrel1.jpg', 'Files/Squirrel1.jpg', 'Files/Squirrel3.jpg', 'Files/Squirrel4.jpg', 'Files/Squirrel5.jpg']
+SQUIRREL_FILES = ['Files/Squirrel1.jpg', 'Files/Squirrel3.jpg', 'Files/Squirrel4.jpg', 'Files/Squirrel5.jpg']
 YOGURT_FILES = ['Files/yogurt.jpg']
 RAVEN_FILES = ['Files/raven.jpg', 'Files/raven2.jpg']
 FOOD_FILES = ['Files/dbe.jpg']
+SAD_FILES = ['Files/rupy_sad.jpg']
+
+# string list
+FOOD_LIST = ["햄버거", "치킨", "찜닭", "떡볶이", "바나나", "물먹어 돼지야"]
 
 # channels
 AVAILABLE_CHANNELS = ['team-강찬영', 'general']
 
-class MyClient(discord.Client):
-    templist = [229472605151821824, # 디스코드 유저 아이디
-    690791607926128640,
-    343606675803996161,
-    694891279623913844,
-    407547561000435722]
+# DB
+DB_INSERT_SQL = 'INSERT INTO user(id) VALUES(?)'
+DB_SELECT_ALL_SQL = 'SELECT * FROM user'
+DB_SELECT_SQL = 'SELECT * FROM user WHERE id=?'
+DB_DELETE_SQL = 'DELETE FROM user WHERE id=?'
 
+DB = sqlite3.connect("DB/User.db")
+cur = DB.execute('CREATE TABLE IF NOT EXISTS user (id TEXT PRIMARY KEY)')
+
+class MyClient(discord.Client):
     async def on_message(self, message):
         ### Validation
         if message.author == self.user: # 자기 메세지 반응 안함
@@ -43,6 +52,7 @@ class MyClient(discord.Client):
         await self.on_yogurt(message)
         await self.on_raven(message)
         await self.on_food(message)
+        await self.on_rupy_sad(message)
         
         ### Feature
         if message.content.startswith('['):
@@ -52,8 +62,8 @@ class MyClient(discord.Client):
     
     async def on_potato(self, message):
         if RE_POTATO.match(message.content):
-            await message.channel.send("여러분의 성원에 힘입어 감자가 모두 동이 났습니다. 감사합니다.")
-            return
+            #await message.channel.send("여러분의 성원에 힘입어 감자가 모두 동이 났습니다. 감사합니다.")
+            #return
             if random.randrange(100) < 85:
                 await message.channel.send("감자")
             else:
@@ -92,9 +102,13 @@ class MyClient(discord.Client):
     async def on_food(self, message):
         if RE_FOOD.match(message.content):
             if random.randrange(100) < 85: 
-                await message.channel.send(random.choice(["햄버거", "치킨", "찜닭", "떡볶이", "바나나", "물먹어 돼지야"]))
+                await message.channel.send(random.choice(FOOD_LIST))
             else:
                 await message.channel.send(file=discord.File(random.choice(FOOD_FILES)))
+
+    async def on_rupy_sad(self, message):
+        if RE_SAD.match(message.content):
+            await message.channel.send(file=discord.File(random.choice(SAD_FILES)))
 
     async def on_command(self, message):
         if message.content == '모든멤버': # JARAM ONLINE의 모든 사람들을 출력함
@@ -106,6 +120,7 @@ class MyClient(discord.Client):
             embed = discord.Embed(title="모든 멤버", description=send_buffer, color=0x00ff50)
             embed.set_author(name="JARAM MEMBERS")
             embed.set_footer(text = "총 멤버 수는 " + str(count) + "입니다.")
+            embed.set_thumbnail(url="https://cafeskthumb-phinf.pstatic.net/MjAxOTAzMTdfMTAw/MDAxNTUyODMwMzc5ODg0.ICcTo_Y5cpYlHj44AZQiPNGbtMAsMMuCdGxrnGDBn0Ug.RnscC7n3LcEZE4iKAZ9t5FvMpR1Brsct4yibkaMYuQQg.PNG.whsqkaak/ICT-Jaram.png?type=w1080")
             await message.channel.send(embed=embed)
             return
             
@@ -189,11 +204,14 @@ class MyClient(discord.Client):
             send_buffer = "" # 캐싱
             count=0
 
-            for i in self.templist:
+            cur.execute(DB_SELECT_ALL_SQL)
+            rows = cur.fetchall()
+            for i in rows:
                 count +=1
-                send_buffer += "Potato addict" + str(count) + " : " + str(self.get_user(i)) + "\n"
+                send_buffer += "Potato addict" + str(count) + " : " + str(self.get_user(int(i[0]))) + "\n"
             embed = discord.Embed(title="Potato addicts", description=send_buffer, color=0x00ff50)
             embed.set_author(name="Those who love potato wedges")
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/723859914090479656/742914673137025105/jaram_photo.jpg")
             await message.channel.send(embed = embed) # 보내기(느림)
             return
 
@@ -201,14 +219,16 @@ class MyClient(discord.Client):
         if message.content.startswith('멤버추가'): # .startswith : !멤버추가 로 시작하는 message는 모두 받음
             realtemp = message.content.split(" ")
             realtemp2 = realtemp[1]
-            self.templist.append(int(realtemp2))
+            DB.execute(DB_INSERT_SQL, (int(realtemp2),))
+            DB.commit()
             await message.channel.send('멤버 추가 완료')
             return
             
         if message.content.startswith('멤버제거'):
             realtemp = message.content.split(" ")
             realtemp2 = realtemp[1]
-            self.templist.remove(int(realtemp2))
+            DB.execute(DB_DELETE_SQL, (int(realtemp2),))
+            DB.commit()
             await message.channel.send('멤버 제거 완료')
             return
 
@@ -242,7 +262,11 @@ class MyClient(discord.Client):
             embed = discord.Embed(title="당첨!", description=tempstr2, color=0x00ff50)
             embed.set_author(name="뽑기")
             await message.channel.send(embed = embed) # 보내기(느림)
+            return
         
+        #
+        
+
 
         if message.content.startswith("명령어"):
             embed = discord.Embed(
@@ -252,21 +276,25 @@ class MyClient(discord.Client):
             embed.add_field(name = '[명령어',value = ': 명령어는 명령어에요^^7' ,inline = False)
             embed.add_field(name = '[모든멤버' , value = ': 서버의 모든 사람을 출력합니다.', inline = False)
             embed.add_field(name = '[멤버',value = ': 감자(?)를 좋아하는 사람들을 출력합니다.' ,inline = False)
-            embed.add_field(name = '[멤버추가', value = ': 감자를 좋아하는 사람을 추가합니다.' ,inline = False)
-            embed.add_field(name = '[멤버제거', value = ': 감자 멤버에서 추방합니다.' ,inline = False)
+            embed.add_field(name = '[멤버추가', value = ': 감자를 좋아하는 사람을 추가합니다.' ,inline = True)
+            embed.add_field(name = '[멤버제거', value = ': 감자 멤버에서 추방합니다.' ,inline = True)
             embed.add_field(name = '[뽑기', value = ': 사용법 : [뽑기 인원수 이름 이름 이름 ...' ,inline = False)
-            embed.add_field(name = '[사다리', value = ': 사용법 : [사다리 이름 이름 사다리를 출력합니다',inline = False)
+            embed.add_field(name = '[사다리', value = ': 사용법 : [사다리 이름 이름 사다리를 출력합니다.',inline = False)
             embed.add_field(name = '숫자', value = ': 숫자를 입력하시면, 제곱을 해줍니다.',inline = False)
             embed.add_field(name = '고양이',value = ': 고양이!!!!!!!!!!!!!!!!!!!!!!!' ,inline = False)
-            embed.add_field(name = '람쥐썬더', value = '채팅 메시지 끝을 \'다\'로 끝내보세요 :D',inline = False)
-            embed.set_thumbnail(url="https://cafeskthumb-phinf.pstatic.net/MjAxOTAzMTdfMTAw/MDAxNTUyODMwMzc5ODg0.ICcTo_Y5cpYlHj44AZQiPNGbtMAsMMuCdGxrnGDBn0Ug.RnscC7n3LcEZE4iKAZ9t5FvMpR1Brsct4yibkaMYuQQg.PNG.whsqkaak/ICT-Jaram.png?type=w1080") # 저도 잘 모르겠어요 왜 안나오지 ;;ㅠㅠ 
+            embed.add_field(name = '람쥐썬더', value = '채팅 메시지 끝을 \'다\'로 끝내보세요. :D',inline = False)
+            embed.add_field(name = '구르트아줌마요구르트주세요', value = '채팅 메시지 끝을 \'요\'로 끝내보세요. :D',inline = False)
+            embed.add_field(name = '악까악', value = '채팅 메시지 끝을 \'까\'로 끝내보세요. :D',inline = False)
+            embed.add_field(name = '울지마 루피가 위로해줄게', value = '우시면 루피가 같이 울어줍니다. :D',inline = False)
+            embed.set_thumbnail(url="https://cafeskthumb-phinf.pstatic.net/MjAxOTAzMTdfMTAw/MDAxNTUyODMwMzc5ODg0.ICcTo_Y5cpYlHj44AZQiPNGbtMAsMMuCdGxrnGDBn0Ug.RnscC7n3LcEZE4iKAZ9t5FvMpR1Brsct4yibkaMYuQQg.PNG.whsqkaak/ICT-Jaram.png?type=w1080")
             await message.channel.send(embed = embed)
+            return
 
 
 
 # 실행 순서 (터미널)
 # 1. 저장 ( ☆ ctrl + s )
-# 2. 실행 (터미널 누르고 ctrl + c 누른 뒤 -> python3 example.py 타이핑)
+# 2. 실행 (터미널 누르고 ctrl + c 누른 뒤 -> python main.py)
 
 # self.
 client = MyClient() # 생성
