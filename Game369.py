@@ -18,7 +18,7 @@ async def Ready(self, message):
 
 # 참여 취소
 async def Unready(self, message):
-    if game_state == GameState.idle and message.author not in ready_user_list:
+    if game_state == GameState.idle and message.author in ready_user_list:
         ready_user_list.remove(message.author)
         await message.channel.send(message.author.name + "참여가 취소되었습니다.")
 
