@@ -243,9 +243,10 @@ class MyClient(discord.Client):
 # 1. 저장 ( ☆ ctrl + s )
 # 2. 실행 (터미널 누르고 ctrl + c 누른 뒤 -> python main.py)
 
-# self.
+# Load token
 f = open("Setting/token", 'r')
 token = f.read().strip()
 f.close()
+
 client = MyClient() # 생성
 client.run(token) # 토큰을 이용하여 활성화
