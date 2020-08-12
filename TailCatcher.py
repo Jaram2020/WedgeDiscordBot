@@ -10,6 +10,7 @@ RE_YOGURT = re.compile(r'^.*(요)[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|
 RE_RAVEN = re.compile(r'^.*((가|까|깎|꺄|깍|꺅|꺆|g+a|ka|KA|GA)[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*)($|\n)')
 RE_FOOD = re.compile(r'^.*((배고파)|(뭐\s*먹지)|(ㅂㄱㅍ))[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
 RE_SAD = re.compile(r'^.*((ㅜ)|(ㅠ)|(T))+\s*($|\n)')
+RE_PLATINUM = re.compile(r'^.*((플레)|(플래))[^0-9a-zA-Zㄱ-ㅎㅏ-ㅣ가-닣댜-힣]*\s*($|\n)')
 
 # files
 POTATO_FILES = ['Files/potato.jpg']
@@ -18,10 +19,12 @@ YOGURT_FILES = ['Files/yogurt.jpg']
 RAVEN_FILES = ['Files/raven.jpg', 'Files/raven2.jpg']
 FOOD_FILES = ['Files/dbe.jpg']
 SAD_FILES = ['Files/rupy_sad.jpg']
+PLATINUM_FILES = ['Files/Platinum-lol.png']
 
 # string list
 FOOD_LIST = ["햄버거", "치킨", "찜닭", "떡볶이", "바나나", "물먹어 돼지야"]
 
+# 기능 추가시 여기다 추가
 async def Catch(self, message):
     await on_potato(self, message)
     await on_cat(self, message)
@@ -30,7 +33,9 @@ async def Catch(self, message):
     await on_raven(self, message)
     await on_food(self, message)
     await on_rupy_sad(self, message)
+    await on_platinum(self, message)
 
+# 각 기능
 async def on_potato(self, message):
     if RE_POTATO.match(message.content):
         #await message.channel.send("여러분의 성원에 힘입어 감자가 모두 동이 났습니다. 감사합니다.")
@@ -80,3 +85,10 @@ async def on_food(self, message):
 async def on_rupy_sad(self, message):
     if RE_SAD.match(message.content):
         await message.channel.send(file=discord.File(random.choice(SAD_FILES)))
+
+async def on_platinum(self, message):
+    if RE_PLATINUM.match(message.content):
+        if random.randrange(100) < 85: 
+            await message.channel.send(random.choice(["티넘"]))
+        else:
+            await message.channel.send(file=discord.File(random.choice(PLATINUM_FILES)))
